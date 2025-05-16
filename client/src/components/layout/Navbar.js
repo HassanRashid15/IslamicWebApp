@@ -8,14 +8,14 @@ const Navbar = () => {
     <nav className="bg-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center w-full justify-between">
             <div className="flex-shrink-0">
               <Link to="/" className="text-2xl font-bold text-indigo-600">
                 Logo
               </Link>
             </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
+            <div className="hidden md:flex mx-auto">
+              <div className="flex items-baseline space-x-8">
                 <Link
                   to="/"
                   className="text-gray-900 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
@@ -42,17 +42,17 @@ const Navbar = () => {
                 </Link>
               </div>
             </div>
+            <div className="hidden md:flex items-center space-x-4">
+              <button className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none">
+                Sign In
+              </button>
+              <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Sign Up
+              </button>
+            </div>
           </div>
 
           {/* Right side buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            <button className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none">
-              Sign In
-            </button>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              Sign Up
-            </button>
-          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
@@ -100,7 +100,7 @@ const Navbar = () => {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-center">
             <Link
               to="/"
               className="text-gray-900 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium"

@@ -28,7 +28,9 @@ const InspirationSection = () => {
           setAyahEn(resEn.data.data);
           // Now fetch the same ayah in Arabic
           const ayahNumber = resEn.data.data.number;
-          const resAr = await axios.get(`https://api.alquran.cloud/v1/ayah/${ayahNumber}/ar`);
+          const resAr = await axios.get(
+            `https://api.alquran.cloud/v1/ayah/${ayahNumber}/ar`
+          );
           if (resAr.data && resAr.data.data) {
             setAyahAr(resAr.data.data);
           }
@@ -86,10 +88,13 @@ const InspirationSection = () => {
               <p className="text-red-500">{ayahError}</p>
             ) : ayahAr && ayahEn ? (
               <>
-                <p className="font-arabic text-2xl text-right mb-2">{ayahAr.text}</p>
+                <p className="font-arabic text-2xl text-right mb-2">
+                  {ayahAr.text}
+                </p>
                 <p className="text-gray-700 mb-2 text-lg">{ayahEn.text}</p>
                 <p className="text-gray-600 mb-2">
-                  {ayahEn.edition.englishName} ({ayahEn.surah.englishName} {ayahEn.numberInSurah})
+                  {ayahEn.edition.englishName} ({ayahEn.surah.englishName}{" "}
+                  {ayahEn.numberInSurah})
                 </p>
               </>
             ) : null}
@@ -104,7 +109,9 @@ const InspirationSection = () => {
               <p className="text-red-500">{hadithError}</p>
             ) : hadith ? (
               <>
-                <p className="font-arabic text-xl text-right mb-2">{hadith.hadithArabic}</p>
+                <p className="font-arabic text-xl text-right mb-2">
+                  {hadith.hadithArabic}
+                </p>
                 <p className="text-gray-600 mb-2">{hadith.hadithEnglish}</p>
                 <div className="text-sm text-gray-500 mt-auto">
                   <p>Book: {hadith.book?.bookName || "Unknown"}</p>

@@ -1,7 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PrayerTimings from "../components/PrayerTimings";
+import QuranFull from "./HolyBookFull";
+import HadithDisplay from "../components/HadithDisplay";
+import InspirationSection from "../components/InspirationSection";
+
+const translationOptions = [
+  { value: "en.asad", label: "English - Muhammad Asad" },
+  { value: "en.pickthall", label: "English - Pickthall" },
+  { value: "en.sahih", label: "English - Sahih International" },
+  { value: "ur.jalandhry", label: "Urdu - Jalandhry" },
+  // Add more as needed
+];
 
 const Home = () => {
+  const [surahList, setSurahList] = useState([]);
+  const [selectedSurah, setSelectedSurah] = useState(1);
+  const [selectedTranslation, setSelectedTranslation] = useState("en.asad");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch("https://api.alquran.cloud/v1/surah")
+      .then((res) => res.json())
+      .then((data) => setSurahList(data.data))
+      .catch(() => setSurahList([]));
+  }, []);
+
+  const handleConfirm = () => {
+    navigate(`/surah/${selectedSurah}/${selectedTranslation}`);
+  };
+
   return (
     <div>
       {/* Hero Banner Section */}
@@ -51,7 +79,61 @@ const Home = () => {
         <PrayerTimings />
       </div>
 
+      {/* Hadith Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <HadithDisplay />
+      </div>
+
+      {/* Quran Selection Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <label htmlFor="surah-select" className="font-semibold text-lg">
+            Select Surah:
+          </label>
+          <select
+            id="surah-select"
+            className="p-2 border rounded-md w-full max-w-xs"
+            value={selectedSurah}
+            onChange={(e) => setSelectedSurah(Number(e.target.value))}
+          >
+            {surahList.map((surah) => (
+              <option key={surah.number} value={surah.number}>
+                {surah.number}. {surah.englishName} ({surah.name})
+              </option>
+            ))}
+          </select>
+          <label
+            htmlFor="translation-select"
+            className="font-semibold text-lg mt-4"
+          >
+            Select Translation:
+          </label>
+          <select
+            id="translation-select"
+            className="p-2 border rounded-md w-full max-w-xs"
+            value={selectedTranslation}
+            onChange={(e) => setSelectedTranslation(e.target.value)}
+          >
+            {translationOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <button
+            className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+            onClick={handleConfirm}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+
+      {/* Full Quran Section */}
+      <QuranFull />
+
       {/* Additional Content Section */}
+      <InspirationSection />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Why Choose Us</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

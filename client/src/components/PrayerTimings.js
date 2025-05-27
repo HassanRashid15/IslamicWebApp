@@ -91,6 +91,44 @@ const PrayerCountdown = ({ nextPrayer, prayerTimes }) => {
   );
 };
 
+const getLocationName = async (lat, lon) => {
+  try {
+    const response = await axios.get(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+    const { address } = response.data;
+    console.log("Reverse geocode address:", address); // Debug log
+    return {
+      area:
+        address.suburb ||
+        address.neighbourhood ||
+        address.residential ||
+        address.city_district ||
+        address.quarter ||
+        "",
+      city: address.city || address.town || address.village || "",
+      state: address.state || "",
+      country: address.country || "",
+    };
+  } catch (error) {
+    console.error("Error getting location name:", error);
+    return { area: "", city: "", state: "", country: "" };
+  }
+};
+
+const formatLocation = ({ country, state, city, area }) => {
+  let parts = [];
+  if (country) parts.push(country);
+  if (state) parts.push(state);
+  if (city) parts.push(city);
+  if (area) parts.push(area);
+  let location = parts.join(", ");
+  if (!area) {
+    location += (location ? " - " : "") + "Area not available";
+  }
+  return location;
+};
+
 const PrayerTimings = () => {
   const [prayerTimes, setPrayerTimes] = useState({
     fajr: "05:30",
@@ -277,8 +315,7 @@ const PrayerTimings = () => {
           <div className="bg-gray-50 p-4 rounded-lg mb-6 text-center flex justify-between">
             {locationDetails.city && (
               <span className="text-sm text-gray-500 mt-1">
-                {locationDetails.country} {locationDetails.state},{" "}
-                {locationDetails.city}{" "}
+                {formatLocation(locationDetails)}
               </span>
             )}
 

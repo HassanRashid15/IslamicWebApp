@@ -7,6 +7,9 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
+import SurahDetail from "./pages/SurahDetail";
+import HadithDisplay from "./components/HadithDisplay";
+import HadithList from "./components/HadithList";
 
 function App() {
   return (
@@ -19,6 +22,12 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/hadiths" element={<HadithDisplay />} />
+            <Route path="/hadiths/:bookSlug" element={<HadithList />} />
+            <Route
+              path="/surah/:surahNumber/:translationEdition"
+              element={<SurahDetail />}
+            />
           </Routes>
         </main>
         <Footer />

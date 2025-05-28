@@ -65,46 +65,47 @@ const HadithDisplay = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container px-4 py-8 max-w-full">
       <h2 className="text-2xl font-bold text-center mb-6">Hadith Collection</h2>
 
       {/* Book Selection */}
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Select a Book
-          </label>
-          <select
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            value={selectedBook || ""}
-            onChange={(e) => setSelectedBook(e.target.value)}
-          >
-            <option value="">Select a book...</option>
-            {books.map((book) => (
-              <option key={book.id} value={book.bookSlug}>
-                {book.bookName} - {book.writerName}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="max-w-full mx-auto bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between gap-3 hadith-display-container">
+          <div className="mb-4 sections-container">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Select a Book
+            </label>
+            <select
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              value={selectedBook || ""}
+              onChange={(e) => setSelectedBook(e.target.value)}
+            >
+              <option value="">Select a book...</option>
+              {books.map((book) => (
+                <option key={book.id} value={book.bookSlug}>
+                  {book.bookName} - {book.writerName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Select Translation
-          </label>
-          <select
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            value={selectedTranslation}
-            onChange={(e) => setSelectedTranslation(e.target.value)}
-          >
-            {translations.map((translation) => (
-              <option key={translation.value} value={translation.value}>
-                {translation.label}
-              </option>
-            ))}
-          </select>
+          <div className="mb-6 sections-container">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Select Translation
+            </label>
+            <select
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              value={selectedTranslation}
+              onChange={(e) => setSelectedTranslation(e.target.value)}
+            >
+              {translations.map((translation) => (
+                <option key={translation.value} value={translation.value}>
+                  {translation.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-
         <button
           onClick={handleConfirm}
           disabled={!selectedBook}

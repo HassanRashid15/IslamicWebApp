@@ -7,3 +7,16 @@
 .font-arabic {
   font-family: "Amiri", serif;
 }
+
+  .sections-container{
+    width: 50%;
+  }
+
+@media (max-width: 550px) {
+  .hadith-display-container {
+    flex-wrap: wrap;
+  }
+  .sections-container{
+    width: 100%;
+  }
+}

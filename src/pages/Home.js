@@ -9,6 +9,7 @@ import SalahSteps from "../components/SalahSteps";
 import IslamicDateBackground from "../components/IslamicDateBackground";
 import IslamicNewsBlogs from "../components/IslamicNewsBlogs";
 import RamadanDuas from "../components/RamadanDuas";
+import MongoStats from "../components/MongoStats";
 
 const FridayAzkhar = () => {
   const azhkar = [
@@ -615,6 +616,9 @@ const Home = () => {
 
       {/* 7. Islamic News & Blogs Section */}
       <IslamicNewsBlogs />
+
+      {/* 8. MongoDB Statistics Section */}
+      <MongoStats />
 
     </div>
     </IslamicDateBackground>

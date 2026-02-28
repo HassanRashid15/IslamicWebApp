@@ -38,9 +38,13 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false }));
 
 // Routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/protected", require("./routes/protected"));
-app.use("/quran", require("./routes/quran"));
+// app.use("/api/auth", require("./routes/auth"));
+// app.use("/api/protected", require("./routes/protected"));
+// app.use("/quran", require("./routes/quran"));
+// app.use("/api/surahs", require("./routes/surahs"));
+// app.use("/api/hadiths", require("./routes/hadiths"));
+app.use("/api/collections", require("./routes/simpleStats"));
+app.use("/api/test", require("./routes/test"));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

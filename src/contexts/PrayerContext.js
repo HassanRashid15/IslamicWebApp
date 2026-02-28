@@ -18,8 +18,10 @@ export const PrayerProvider = ({ children }) => {
         return localStorage.getItem("adhanAudioEnabled") === "true";
     });
     const [isPlaying, setIsPlaying] = useState(false);
-    const adhanAudioRef = useRef(new Audio("https://www.islamcan.com/audio/adhan/azan1.mp3"));
-    const duaAudioRef = useRef(new Audio("https://www.islamcan.com/audio/adhan/dua_after_adhan.mp3"));
+    const [locationPermission, setLocationPermission] = useState('prompt');
+    const [isGettingLocation, setIsGettingLocation] = useState(false);
+    const adhanAudioRef = useRef(new Audio("https://cdn.islamic.network/adhan/1.mp3"));
+    const duaAudioRef = useRef(new Audio("https://cdn.islamic.network/dua/1.mp3"));
     const hasPlayedAdhanRef = useRef({}); // Track per prayer name to avoid repeat triggers
     const toastIdRef = useRef(null);
 
@@ -196,16 +198,90 @@ export const PrayerProvider = ({ children }) => {
             });
     };
 
+    // User-initiated geolocation function
+    const requestPreciseLocation = async () => {
+        if (!navigator.geolocation) {
+            throw new Error('Geolocation is not supported by this browser');
+        }
+
+        setIsGettingLocation(true);
+        
+        try {
+            const position = await new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Error('Geolocation timeout after 10 seconds'));
+                }, 10000);
+                
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        clearTimeout(timeoutId);
+                        resolve(pos);
+                    },
+                    (err) => {
+                        clearTimeout(timeoutId);
+                        reject(err);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000 // 5 minutes cache
+                    }
+                );
+            });
+            
+            const { latitude, longitude } = position.coords;
+        
+            // Reverse geocoding to get detailed address
+            const reverseGeoResponse = await axios.get(
+                `https://nominatim.openstreetmap.org/reverse`,
+                {
+                    params: {
+                        lat: latitude,
+                        lon: longitude,
+                        format: 'json',
+                        addressdetails: 1
+                    }
+                }
+            );
+            
+            const address = reverseGeoResponse.data.address;
+            const locationData = {
+                city: address.city || address.town || address.village || '',
+                state: address.state || address.region || '',
+                country: address.country || '',
+                lat: latitude,
+                lon: longitude,
+                area: address.suburb || address.neighbourhood || address.district || '',
+                street: address.road || address.street || ''
+            };
+            
+            setLocationDetails(locationData);
+            setLocationPermission('granted');
+            return locationData;
+            
+        } catch (error) {
+            setLocationPermission('denied');
+            throw error;
+        } finally {
+            setIsGettingLocation(false);
+        }
+    };
+
     const fetchPrayerTimes = async () => {
         try {
+            // Use IP-based location by default (no geolocation prompt)
+            let locationData = { city: '', state: '', country: '', lat: '', lon: '', area: '', street: '' };
+            
+            // Only use IP-based location to avoid browser violations
             const ipResponse = await axios.get("http://ip-api.com/json/");
             const { city, regionName, country, lat, lon } = ipResponse.data;
+            locationData = { city, state: regionName, country, lat, lon, area: '', street: '' };
 
-            setLocationDetails({ city, state: regionName, country, lat, lon });
+            setLocationDetails(locationData);
 
             const response = await axios.get(
                 `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}`,
-                { params: { latitude: lat, longitude: lon, method: "2" } }
+                { params: { latitude: locationData.lat, longitude: locationData.lon, method: "2" } }
             );
 
             const timings = response.data.data.timings;
@@ -355,11 +431,14 @@ export const PrayerProvider = ({ children }) => {
             hijriDate,
             dayName,
             ramadanInfo,
+            locationPermission,
+            isGettingLocation,
             toggleAudioEnabled,
             stopAudio,
             playDuaOnly,
             testAdhanAndDua,
-            fetchPrayerTimes
+            fetchPrayerTimes,
+            requestPreciseLocation
         }}>
             {children}
         </PrayerContext.Provider>

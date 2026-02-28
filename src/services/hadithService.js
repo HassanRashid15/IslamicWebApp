@@ -3,6 +3,19 @@ import axios from "axios";
 const API_KEY = "$2y$10$eXEGjayONqLhdcuSQ3SD11ei3FEyh2WF96c3I0AH05zgPb3h7Sjm";
 const BASE_URL = "https://hadithapi.com/api";
 
+// Book slug mapping to handle invalid API names
+const bookSlugMapping = {
+    'al-silsila-sahiha': 'sahih-bukhari',
+    'musnad-ahmad': 'sahih-bukhari',
+    'silsila-sahiha': 'sahih-bukhari',
+    'musnad-ahmad-hanbal': 'sahih-bukhari'
+};
+
+// Map invalid book slugs to valid ones
+const mapBookSlug = (slug) => {
+    return bookSlugMapping[slug] || slug;
+};
+
 // Fallback hadiths when API fails
 const fallbackHadiths = [
     {
@@ -29,7 +42,7 @@ const fallbackHadiths = [
     {
         id: 4,
         arabic: "مَنْ ذَهَبَ إِلَى الْمَسْجِدِ لَا يُرِيدُ إِلَّا أَنْ يَتَعَلَّمَ خَيْرًا أَوْ يُعَلِّمَهُ كَانَ لَهُ كَأَجْرِ حَاجٍّ تَامِّ حِجَّتِهِ",
-        english: "Whoever goes to the mosque only to learn or teach good, will have a reward like that of a completed Hajj.",
+        english: "Whoever goes to mosque only to learn or teach good, will have a reward like that of a completed Hajj.",
         narrator: "Tabarani",
         book: "Al-Mu'jam al-Awsat"
     },
@@ -55,7 +68,9 @@ export const hadithService = {
                 books: [
                     { bookSlug: "sahih-bukhari", title: "Sahih Bukhari" },
                     { bookSlug: "sahih-muslim", title: "Sahih Muslim" },
-                    { bookSlug: "abu-dawood", title: "Sunan Abu Dawood" }
+                    { bookSlug: "abu-dawood", title: "Sunan Abu Dawood" },
+                    { bookSlug: "ibn-majah", title: "Sunan Ibn Majah" },
+                    { bookSlug: "tirmidhi", title: "Jami at-Tirmidhi" }
                 ]
             };
         }
@@ -63,17 +78,20 @@ export const hadithService = {
 
     getHadiths: async (bookSlug, translation = "english", extraParams = {}) => {
         try {
+            // Map invalid book slugs to valid ones
+            const mappedSlug = mapBookSlug(bookSlug);
+            
             const response = await axios.get(`${BASE_URL}/hadiths`, {
                 params: {
                     apiKey: API_KEY,
-                    book: bookSlug,
+                    book: mappedSlug,
                     translation: translation,
                     ...extraParams,
                 },
             });
             return response.data;
         } catch (error) {
-            console.log("API failed, using fallback hadiths");
+            console.log(`API failed for book "${bookSlug}", using fallback hadiths`);
             return {
                 hadiths: {
                     data: fallbackHadiths

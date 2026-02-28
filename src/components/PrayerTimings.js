@@ -199,13 +199,36 @@ const getLocationName = async (lat, lon) => {
   }
 };
 
-const formatLocation = ({ country, state, city, area }) => {
+const formatLocation = ({ country, state, city, area, street, zip, isp, houseNumber, quarter, district, county }) => {
+  console.log("formatLocation received:", { country, state, city, area, street, zip, isp, houseNumber, quarter, district, county });
+  
   const parts = [];
-  if (country) parts.push(country);
-  if (state) parts.push(state);
+  
+  // Build street address with house number
+  if (houseNumber && street) {
+    parts.push(`${houseNumber} ${street}`);
+  } else if (street) {
+    parts.push(street);
+  }
+  
+  // Add area details in order of specificity
+  if (quarter && quarter !== area && quarter !== city) parts.push(quarter);
+  if (district && district !== area && district !== city) parts.push(district);
+  if (area && area !== city) parts.push(area);
+  if (county && county !== city && county !== state) parts.push(county);
+  
+  // Add main location components
   if (city) parts.push(city);
-  if (area) parts.push(area);
-  return parts.join(", ") || "Location not available";
+  if (state && state !== city) parts.push(state);
+  if (zip) parts.push(zip);
+  if (country) parts.push(country);
+  
+  const location = parts.join(", ") || "Location not available";
+  
+  // Add ISP info if available
+  const result = isp ? `${location} (${isp})` : location;
+  console.log("formatLocation result:", result);
+  return result;
 };
 
 const PrayerTimings = () => {
@@ -236,13 +259,15 @@ const PrayerTimings = () => {
   });
 
   const [locationDetails, setLocationDetails] = useState({
-    city: "", state: "", country: "", area: "", lat: "", lon: ""
+    city: "", state: "", country: "", area: "", lat: "", lon: "", street: "", zip: "", isp: "",
+    houseNumber: "", quarter: "", district: "", county: ""
   });
   const [error, setError] = useState("");
   const [dateInfo, setDateInfo] = useState({ hijriDate: "", gregorianDate: "" });
   const [qibla, setQibla] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
+  const [refreshingLocation, setRefreshingLocation] = useState(false);
 
   // Sync with context
   useEffect(() => {
@@ -257,50 +282,259 @@ const PrayerTimings = () => {
   useEffect(() => {
     const getDetailedInfo = async () => {
       try {
-        const ipResponse = await axios.get("http://ip-api.com/json/");
-        const { lat, lon } = ipResponse.data;
+        let locationData = {};
+        let bestAccuracy = Infinity;
+        let bestPosition = null;
+        
+        // Primary: Try browser geolocation with multiple attempts for best accuracy
+        if (navigator.geolocation) {
+          console.log("✅ Geolocation supported, attempting multiple readings for accuracy...");
+          
+          // Try up to 3 times to get most accurate reading
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              console.log(`📍 Attempt ${attempt} of 3...`);
+              const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    console.log(`📍 Attempt ${attempt} success:`, pos);
+                    resolve(pos);
+                  }, 
+                  (error) => {
+                    console.log(`❌ Attempt ${attempt} error:`, error);
+                    reject(error);
+                  }, {
+                  enableHighAccuracy: true,
+                  timeout: 10000 + (attempt * 2000), // Increasing timeout
+                  maximumAge: 0 // Force fresh location each time
+                });
+              });
+              
+              const { latitude, longitude, accuracy } = position.coords;
+              console.log(`📍 Attempt ${attempt} coordinates:`, { latitude, longitude, accuracy });
+              
+              // Keep the most accurate reading
+              if (accuracy < bestAccuracy) {
+                bestAccuracy = accuracy;
+                bestPosition = position;
+                console.log(`🎯 New best accuracy: ${accuracy}m (previous: ${bestAccuracy}m)`);
+              }
+              
+              // If we got a very accurate reading, stop early
+              if (accuracy <= 10) {
+                console.log(`✅ Good accuracy achieved: ${accuracy}m, stopping early`);
+                break;
+              }
+              
+              // Wait between attempts
+              if (attempt < 3) {
+                console.log(`⏱️ Waiting 2 seconds before next attempt...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            } catch (attemptError) {
+              console.log(`❌ Attempt ${attempt} failed:`, attemptError);
+              if (attempt === 3) {
+                throw attemptError;
+              }
+            }
+          }
+          
+          if (bestPosition) {
+            const { latitude, longitude } = bestPosition.coords;
+            console.log("🏆 Using best position:", { latitude, longitude, accuracy: bestAccuracy });
+            
+            // Use reverse geocoding to get detailed address
+            console.log("🔍 Making reverse geocoding request...");
+            const reverseGeoResponse = await axios.get(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+              { headers: { "Accept-Language": "en" } }
+            );
+            
+            const address = reverseGeoResponse.data.address;
+            console.log("Reverse geocoding response:", address);
+            
+            locationData = {
+              city: address.city || address.town || address.village || "",
+              state: address.state || "",
+              country: address.country || "",
+              area: address.suburb || address.neighbourhood || address.residential || "",
+              street: address.road || address.street || "",
+              houseNumber: address.house_number || "",
+              lat: latitude,
+              lon: longitude,
+              zip: address.postcode || "",
+              isp: "",
+              quarter: address.quarter || "",
+              district: address.city_district || "",
+              county: address.county || ""
+            };
+            
+            console.log("Browser geolocation data:", locationData);
+            
+          } catch (geoError) {
+            console.log("Browser geolocation denied/failed, using IPFind fallback:", geoError.message);
+            
+            // Fallback to IPFind API
+            const apiKey = process.env.REACT_APP_IPFIND_API_KEY;
+            const ipResponse = await axios.get(`https://api.ipfind.com/me?auth=${apiKey}`);
+            const data = ipResponse.data;
+            
+            console.log("IPFind API fallback response:", data);
+            
+            locationData = {
+              city: data.city || "",
+              state: data.region || "",
+              country: data.country || "",
+              area: data.county || data.region || "",
+              lat: data.latitude || "",
+              lon: data.longitude || "",
+              zip: "",
+              isp: "",
+              street: "",
+              houseNumber: "", quarter: "", district: "", county: ""
+            };
+          }
+        } else {
+          // No geolocation support, use IPFind
+          const apiKey = process.env.REACT_APP_IPFIND_API_KEY;
+          const ipResponse = await axios.get(`https://api.ipfind.com/me?auth=${apiKey}`);
+          const data = ipResponse.data;
+          
+          console.log("IPFind API (no geolocation support):", data);
+          
+          locationData = {
+            city: data.city || "",
+            state: data.region || "",
+            country: data.country || "",
+            area: data.county || data.region || "",
+            lat: data.latitude || "",
+            lon: data.longitude || "",
+            zip: "",
+            isp: "",
+            street: "",
+            houseNumber: "", quarter: "", district: "", county: ""
+          };
+        }
+        
+        console.log("Final location data:", locationData);
+        setLocationDetails(prev => ({ ...prev, ...locationData }));
 
-        // Qibla
-        const qiblaRes = await axios.get(`https://api.aladhan.com/v1/qibla/${lat}/${lon}`);
-        if (qiblaRes.data?.data) setQibla(qiblaRes.data.data.direction);
+        // Qibla and prayer times (only if we have coordinates)
+        if (locationData.lat && locationData.lon) {
+          const qiblaRes = await axios.get(`https://api.aladhan.com/v1/qibla/${locationData.lat}/${locationData.lon}`);
+          if (qiblaRes.data?.data) setQibla(qiblaRes.data.data.direction);
 
-        // Dates
-        const dateRes = await axios.get(`https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}`, {
-          params: { latitude: lat, longitude: lon, method: "2" }
-        });
-        const data = dateRes.data.data;
-        setDateInfo({
-          dayName: data.date.gregorian.weekday.en,
-          hijriDate: `${data.date.hijri.day} ${data.date.hijri.month.en} ${data.date.hijri.year} AH`,
-          gregorianDate: `${data.date.gregorian.day} ${data.date.gregorian.month.en} ${data.date.gregorian.year}`,
-        });
+          const dateRes = await axios.get(`https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}`, {
+            params: { latitude: locationData.lat, longitude: locationData.lon, method: "2" }
+          });
+          const dateData = dateRes.data.data;
+          setDateInfo({
+            dayName: dateData.date.gregorian.weekday.en,
+            hijriDate: `${dateData.date.hijri.day} ${dateData.date.hijri.month.en} ${dateData.date.hijri.year} AH`,
+            gregorianDate: `${dateData.date.gregorian.day} ${dateData.date.gregorian.month.en} ${dateData.date.gregorian.year}`,
+          });
 
-        // Other times
-        const timings = data.timings;
-        const nightStart = parseTimeToMinutes(timings.Maghrib);
-        const nightEnd = parseTimeToMinutes(timings.Fajr) + 24 * 60;
-        const nightDuration = nightEnd - nightStart;
+          // Other times
+          const timings = dateData.timings;
+          const nightStart = parseTimeToMinutes(timings.Maghrib);
+          const nightEnd = parseTimeToMinutes(timings.Fajr) + 24 * 60;
+          const nightDuration = nightEnd - nightStart;
 
-        const minutesToTime = (mins) => {
-          const h = Math.floor(mins / 60) % 24;
-          const m = Math.round(mins % 60);
-          return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-        };
+          const minutesToTime = (mins) => {
+            const h = Math.floor(mins / 60) % 24;
+            const m = Math.round(mins % 60);
+            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+          };
 
-        setOtherTimes({
-          imsak: timings.Imsak,
-          sunset: timings.Sunset || timings.Maghrib,
-          midnight: minutesToTime(nightStart + nightDuration / 2),
-          firstThird: minutesToTime(nightStart + nightDuration / 3),
-          lastThird: minutesToTime(nightStart + (nightDuration * 2) / 3),
-        });
+          setOtherTimes({
+            imsak: timings.Imsak,
+            sunset: timings.Sunset || timings.Maghrib,
+            midnight: minutesToTime(nightStart + nightDuration / 2),
+            firstThird: minutesToTime(nightStart + nightDuration / 3),
+            lastThird: minutesToTime(nightStart + (nightDuration * 2) / 3),
+          });
+        }
 
       } catch (err) {
-        console.error("Error fetching detailed prayer info:", err);
+        console.error("Error getting location:", err);
       }
     };
     getDetailedInfo();
   }, []);
+
+  const refreshLocation = async () => {
+    setRefreshingLocation(true);
+    try {
+      if (navigator.geolocation) {
+        console.log("🔄 Refreshing location...");
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              console.log("📍 Refresh geolocation success:", pos);
+              resolve(pos);
+            }, 
+            (error) => {
+              console.log("❌ Refresh geolocation error:", error);
+              reject(error);
+            }, {
+            enableHighAccuracy: true,
+            timeout: 15000, // Longer timeout for refresh
+            maximumAge: 0 // Force fresh location
+          });
+        });
+        
+        const { latitude, longitude } = position.coords;
+        console.log("🔄 Refresh coordinates:", { latitude, longitude });
+        
+        const reverseGeoResponse = await axios.get(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        
+        const address = reverseGeoResponse.data.address;
+        console.log("🔄 Refresh reverse geocoding:", address);
+        
+        const locationData = {
+          city: address.city || address.town || address.village || "",
+          state: address.state || "",
+          country: address.country || "",
+          area: address.suburb || address.neighbourhood || address.residential || "",
+          street: address.road || address.street || "",
+          houseNumber: address.house_number || "",
+          lat: latitude,
+          lon: longitude,
+          zip: address.postcode || "",
+          isp: "",
+          quarter: address.quarter || "",
+          district: address.city_district || "",
+          county: address.county || ""
+        };
+        
+        console.log("🔄 Refresh location data:", locationData);
+        setLocationDetails(prev => ({ ...prev, ...locationData }));
+        
+        // Update prayer times with new coordinates
+        if (latitude && longitude) {
+          const qiblaRes = await axios.get(`https://api.aladhan.com/v1/qibla/${latitude}/${longitude}`);
+          if (qiblaRes.data?.data) setQibla(qiblaRes.data.data.direction);
+
+          const dateRes = await axios.get(`https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}`, {
+            params: { latitude, longitude, method: "2" }
+          });
+          const dateData = dateRes.data.data;
+          setDateInfo({
+            dayName: dateData.date.gregorian.weekday.en,
+            hijriDate: `${dateData.date.hijri.day} ${dateData.date.hijri.month.en} ${dateData.date.hijri.year} AH`,
+            gregorianDate: `${dateData.date.gregorian.day} ${dateData.date.gregorian.month.en} ${dateData.date.gregorian.year}`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("❌ Refresh location failed:", err);
+    } finally {
+      setRefreshingLocation(false);
+    }
+  };
 
   useEffect(() => {
     const updateCurrentTime = () => {
@@ -359,12 +593,24 @@ const PrayerTimings = () => {
       ) : (
         <>
           <div className="bg-gray-50 p-4 rounded-lg mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-center">
-            {locationDetails.city && (
+            {(() => {
+              console.log("Final locationDetails before render:", locationDetails);
+              return locationDetails.city;
+            })() && (
               <div className="flex flex-col items-center sm:items-start">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Your Location</span>
-                <span className="text-sm text-gray-700 font-medium">
-                  {formatLocation(locationDetails)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700 font-medium">
+                    {formatLocation(locationDetails)}
+                  </span>
+                  <button
+                    onClick={refreshLocation}
+                    disabled={refreshingLocation}
+                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+                  >
+                    {refreshingLocation ? "🔄 Refreshing..." : "🔄 Refresh"}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -385,7 +631,7 @@ const PrayerTimings = () => {
             <div className="flex flex-col items-center sm:items-end">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date & Day</span>
               <p className="text-sm text-gray-700 font-medium">
-                {dateInfo.dayName}, {dateInfo.gregorianDate}
+                {dateInfo.dayName}, {dateInfo.gregorianDate} 
               </p>
             </div>
           </div>

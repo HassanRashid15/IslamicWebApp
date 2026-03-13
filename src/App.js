@@ -10,27 +10,16 @@ import "./App.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { PrayerProvider } from "./contexts/PrayerContext";
 import { IslamicDateProvider } from "./contexts/IslamicDateContext";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { AzkharProvider } from "./contexts/AzkharContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
+import { Navbar, Footer, WelcomeModal, ProtectedRoute, PrayerTimings, HadithDisplay, HadithList, Login, Register, VerifyEmail, ForgotPassword, ResetPassword } from "./components";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import SurahDetail from "./pages/SurahDetail";
-import HadithDisplay from "./components/HadithDisplay";
-import HadithList from "./components/HadithList";
 import QuranDisplay from "./pages/HolyBookDisplay";
-import WelcomeModal from "./components/WelcomeModal";
-
-// Auth Pages
-import Login from "./components/auth/Login";
-import Register from "./components/auth/Register";
-import VerifyEmail from "./components/auth/VerifyEmail";
-import ForgotPassword from "./components/auth/ForgotPassword";
-import ResetPassword from "./components/auth/ResetPassword";
 
 // Protected Pages
 import Dashboard from "./pages/Dashboard";
@@ -82,14 +71,15 @@ const AuthRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <PrayerProvider>
-        <IslamicDateProvider>
-          <Router>
-            <div className="min-h-screen flex flex-col">
-              <WelcomeModal />
-              <ToastContainer position="top-right" autoClose={5000} />
-              <Navbar />
-              <main className="flex-grow">
+      <AzkharProvider>
+        <PrayerProvider>
+          <IslamicDateProvider>
+            <Router>
+              <div className="min-h-screen flex flex-col">
+                <WelcomeModal />
+                <ToastContainer position="top-right" autoClose={5000} />
+                <Navbar />
+                <main className="flex-grow">
                 <Routes>
                   {/* ... existing routes ... */}
                   <Route path="/" element={<Home />} />
@@ -215,8 +205,9 @@ function App() {
           </Router>
         </IslamicDateProvider>
       </PrayerProvider>
-    </AuthProvider>
-  );
+    </AzkharProvider>
+  </AuthProvider>
+);
 }
 
 export default App;

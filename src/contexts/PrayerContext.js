@@ -15,7 +15,8 @@ export const PrayerProvider = ({ children }) => {
     const [dayName, setDayName] = useState("");
     const [ramadanInfo, setRamadanInfo] = useState({ isRamadan: false, daysToRamadan: null });
     const [isAudioEnabled, setIsAudioEnabled] = useState(() => {
-        return localStorage.getItem("adhanAudioEnabled") === "true";
+        const saved = localStorage.getItem("adhanAudioEnabled");
+        return saved !== "false"; // Enable by default, only disable if explicitly set to "false"
     });
     const [isPlaying, setIsPlaying] = useState(false);
     const [locationPermission, setLocationPermission] = useState('prompt');
@@ -404,17 +405,26 @@ export const PrayerProvider = ({ children }) => {
         localStorage.setItem("adhanAudioEnabled", newState ? "true" : "false");
 
         if (newState) {
-            // Unlock both audio contexts briefly
+            // Unlock both audio contexts briefly with better error handling
             const adhan = adhanAudioRef.current;
             const dua = duaAudioRef.current;
 
-            Promise.all([
-                adhan.play().then(() => adhan.pause()),
-                dua.play().then(() => dua.pause())
-            ]).then(() => {
-                adhan.currentTime = 0;
-                dua.currentTime = 0;
-            }).catch(() => { });
+            // Try to unlock audio context, but don't fail if it doesn't work
+            try {
+                Promise.all([
+                    adhan.play().catch(() => Promise.resolve()).then(() => adhan.pause()),
+                    dua.play().catch(() => Promise.resolve()).then(() => dua.pause())
+                ]).then(() => {
+                    adhan.currentTime = 0;
+                    dua.currentTime = 0;
+                }).catch(() => {
+                    // Silently handle audio unlock errors
+                    console.log("Audio context unlock failed, but continuing...");
+                });
+            } catch (error) {
+                // Handle any unexpected errors during audio unlock
+                console.log("Audio initialization failed:", error.message);
+            }
         } else {
             stopAudio();
         }

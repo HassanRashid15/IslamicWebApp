@@ -7,6 +7,8 @@ const path = require("path");
 // Load env vars
 require("dotenv").config();
 
+const connectDB = require("./config/database");
+
 const app = express();
 
 // Security middleware
@@ -42,7 +44,7 @@ app.use(express.urlencoded({ extended: false }));
 // app.use("/api/protected", require("./routes/protected"));
 // app.use("/quran", require("./routes/quran"));
 // app.use("/api/surahs", require("./routes/surahs"));
-// app.use("/api/hadiths", require("./routes/hadiths"));
+app.use("/api/hadiths", require("./routes/hadiths"));
 app.use("/api/collections", require("./routes/simpleStats"));
 app.use("/api/test", require("./routes/test"));
 
@@ -88,26 +90,32 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Islamic App Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(
-    `🔗 Client URL: ${process.env.CLIENT_URL || "http://localhost:3000"}`
-  );
-  if (process.env.NODE_ENV === "production") {
-    console.log(`📦 Serving React app from /build`);
-  }
-});
+connectDB()
+  .then(() => {
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Islamic App Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(
+        `🔗 Client URL: ${process.env.CLIENT_URL || "http://localhost:3000"}`
+      );
+      if (process.env.NODE_ENV === "production") {
+        console.log(`📦 Serving React app from /build`);
+      }
+    });
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => {
+    // Handle unhandled promise rejections
+    process.on("unhandledRejection", (err, promise) => {
+      console.log(`Error: ${err.message}`);
+      server.close(() => {
+        process.exit(1);
+      });
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to start server:", err.message);
     process.exit(1);
   });
-});
 
 module.exports = app;

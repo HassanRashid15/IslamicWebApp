@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import IslamicQuote from "./IslamicQuote";
-import { authAPI } from "../../services/api";
+import { authAPI } from "../../../services/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

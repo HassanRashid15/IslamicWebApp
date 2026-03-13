@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import IslamicQuote from "./IslamicQuote";
-import { authAPI } from "../../services/api";
+import { authAPI } from "../../../services/api";
 
 const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);

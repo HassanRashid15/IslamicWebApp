@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PrayerTimings from "../components/PrayerTimings";
+import { PrayerTimings } from "../features/prayer/components";
 import { usePrayer } from "../contexts/PrayerContext";
-import HadithDisplay from "../components/HadithDisplay";
+import { HadithDisplay } from "../features/hadith/components";
+import { DailyAzkharDisplay, AzkharResetButton } from "../features/azkhar/components";
+import { WelcomeModal } from "../components";
 import InspirationSection from "../components/InspirationSection";
 import KidsZone from "../components/KidsZone";
 import SalahSteps from "../components/SalahSteps";
@@ -10,6 +12,7 @@ import IslamicDateBackground from "../components/IslamicDateBackground";
 import IslamicNewsBlogs from "../components/IslamicNewsBlogs";
 import RamadanDuas from "../components/RamadanDuas";
 import MongoStats from "../components/MongoStats";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Badge } from "../components/ui";
 
 const FridayAzkhar = () => {
   const azhkar = [
@@ -40,9 +43,9 @@ const FridayAzkhar = () => {
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-1.5 bg-blue-500/20 rounded-full border border-blue-400/30 text-blue-300 text-sm font-bold tracking-[0.3em] uppercase mb-4">
+          <Badge className="mb-4 bg-blue-500/20 border-blue-400/30 text-blue-300 text-sm font-bold tracking-[0.3em] uppercase px-4 py-1.5">
             The Blessed Friday
-          </div>
+          </Badge>
           <h2 className="decorative-font text-4xl md:text-5xl text-white font-black mb-4">
             Friday <span className="text-blue-400">Blessings</span>
           </h2>
@@ -54,17 +57,23 @@ const FridayAzkhar = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {azhkar.map((item, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-8 hover:bg-white/10 transition-all duration-500 group border-b-4 border-b-blue-500/50">
-              <h3 className="heading-font text-blue-400 text-lg font-bold mb-4 uppercase tracking-wider">{item.title}</h3>
-              <p className="text-3xl text-white mb-6 font-amiri leading-loose" dir="rtl">{item.arabic}</p>
-              <p className="body-font text-blue-50/80 italic mb-4">"{item.english}"</p>
-              <div className="pt-4 border-t border-white/10">
-                <p className="text-xs text-blue-200/50 leading-relaxed font-medium">
-                  <span className="text-blue-400 font-bold uppercase tracking-tighter mr-2">Sunnah:</span>
-                  {item.benefit}
-                </p>
-              </div>
-            </div>
+            <Card key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] hover:bg-white/10 transition-all duration-500 group border-b-4 border-b-blue-500/50">
+              <CardContent className="p-8">
+                <CardTitle className="heading-font text-blue-400 text-lg font-bold mb-4 uppercase tracking-wider">
+                  {item.title}
+                </CardTitle>
+                <p className="text-3xl text-white mb-6 font-amiri leading-loose" dir="rtl">{item.arabic}</p>
+                <CardDescription className="body-font text-blue-50/80 italic mb-4 text-lg">
+                  "{item.english}"
+                </CardDescription>
+                <div className="pt-4 border-t border-white/10">
+                  <p className="text-xs text-blue-200/50 leading-relaxed font-medium">
+                    <span className="text-blue-400 font-bold uppercase tracking-tighter mr-2">Sunnah:</span>
+                    {item.benefit}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -72,7 +81,7 @@ const FridayAzkhar = () => {
   );
 };
 
-const RamadanBanner = ({ ramadanInfo }) => {
+const RamadanBanner = ({ ramadanInfo, showRamadanCalendar, setShowRamadanCalendar }) => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
 
   useEffect(() => {
@@ -109,7 +118,7 @@ const RamadanBanner = ({ ramadanInfo }) => {
     return (
       <div className="bg-gradient-to-r from-emerald-600 to-teal-600 py-8 overflow-hidden relative border-y border-emerald-500/20">
         <div className="absolute inset-0 opacity-10 islamic-pattern"></div>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between relative z-10 text-white">
+        <div className="flex flex-col md:flex-row items-center justify-between relative z-10 text-white gap-4">
           <div className="flex items-center gap-6 mb-4 md:mb-0">
             <div className="text-5xl animate-bounce-slow">🌙</div>
             <div>
@@ -117,10 +126,17 @@ const RamadanBanner = ({ ramadanInfo }) => {
               <p className="body-font text-xl opacity-90 italic">Welcome to the Month of Divine Blessings and Reflection.</p>
             </div>
           </div>
-          <button onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-3 bg-white text-emerald-700 font-bold rounded-2xl hover:bg-emerald-50 transition-all shadow-lg active:scale-95">
-            View Iftar & Suhoor
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={() => setShowRamadanCalendar(true)}
+              className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-400 transition-all shadow-lg active:scale-95">
+              View Ramadan Calendar
+            </Button>
+            <Button onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}
+              variant="outline"
+              className="px-8 py-3 bg-white text-emerald-700 font-bold rounded-2xl hover:bg-emerald-50 transition-all shadow-lg active:scale-95 border-white">
+              View Iftar & Suhoor
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -164,10 +180,11 @@ const RamadanBanner = ({ ramadanInfo }) => {
           ))}
         </div>
 
-        <button onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}
-          className="px-8 py-3 bg-white text-amber-700 font-bold rounded-2xl hover:bg-amber-50 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+        <Button onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}
+          variant="outline"
+          className="px-8 py-3 bg-white text-amber-700 font-bold rounded-2xl hover:bg-amber-50 transition-all shadow-lg active:scale-95 whitespace-nowrap border-white">
           Prepare Now
-        </button>
+        </Button>
       </div>
 
       <style jsx>{`
@@ -194,8 +211,28 @@ const Home = () => {
   const [surahList, setSurahList] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(1);
   const [selectedTranslation, setSelectedTranslation] = useState("en.sahih");
-  const { ramadanInfo, dayName } = usePrayer();
+  const { ramadanInfo, dayName, hijriDate } = usePrayer();
   const navigate = useNavigate();
+  const [showRamadanCalendar, setShowRamadanCalendar] = useState(false);
+
+  // Get current Ramadan day
+  const getCurrentRamadanDay = () => {
+    if (!ramadanInfo?.isRamadan || !hijriDate) return 1;
+    
+    // Handle different hijriDate formats
+    let hijriDay = 1;
+    if (typeof hijriDate === 'string') {
+      // Try to extract day number from string format
+      const dayMatch = hijriDate.match(/^(\d+)/);
+      if (dayMatch) {
+        hijriDay = parseInt(dayMatch[1]) || 1;
+      }
+    } else if (typeof hijriDate === 'object' && hijriDate.day) {
+      hijriDay = parseInt(hijriDate.day) || 1;
+    }
+    
+    return Math.min(Math.max(hijriDay, 1), 30);
+  };
 
   useEffect(() => {
     fetch("https://api.alquran.cloud/v1/surah")
@@ -207,6 +244,19 @@ const Home = () => {
   const handleConfirm = () => {
     navigate(`/surah/${selectedSurah}/${selectedTranslation}`);
   };
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showRamadanCalendar) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showRamadanCalendar]);
 
   return (
     <IslamicDateBackground>
@@ -386,51 +436,57 @@ const Home = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-20 fade-in-up stagger-6">
-            <button className="button-premium heading-font px-12 py-5 text-lg font-bold text-[#062026] rounded-2xl flex items-center gap-3 active:scale-95 shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] transition-all duration-300"
+            <Button className="button-premium heading-font px-12 py-5 text-lg font-bold text-[#062026] rounded-2xl flex items-center gap-3 active:scale-95 shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] transition-all duration-300"
               onClick={() => document.getElementById('knowledge-center').scrollIntoView({ behavior: 'smooth' })}>
               Start Exploring
               <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
-            </button>
+            </Button>
 
-            <button className="heading-font px-12 py-5 text-lg font-semibold text-white rounded-2xl border border-amber-500/50 hover:bg-amber-500/10 transition-all duration-300 backdrop-blur-sm active:scale-95 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)]"
+            <Button variant="outline" className="heading-font px-12 py-5 text-lg font-semibold text-white rounded-2xl border border-amber-500/50 hover:bg-amber-500/10 transition-all duration-300 backdrop-blur-sm active:scale-95 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)]"
               onClick={() => document.getElementById('why-us').scrollIntoView({ behavior: 'smooth' })}>
               View Features
-            </button>
+            </Button>
           </div>
 
           {/* Quick Access Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="glass-card rounded-[2rem] p-8 group cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] transition-all duration-300" onClick={() => navigate(`/quran/en.sahih`)}>
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-emerald-500/30 transition-all">
-                <svg className="w-8 h-8 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <h3 className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">Holy Quran</h3>
-              <p className="body-font text-emerald-100/60 text-lg">Pure Divine Revelation</p>
-            </div>
+            <Card className="glass-card rounded-[2rem] p-8 group cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] transition-all duration-300" onClick={() => navigate(`/quran/en.sahih`)}>
+              <CardContent className="p-0">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-emerald-500/30 transition-all">
+                  <svg className="w-8 h-8 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <CardTitle className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">Holy Quran</CardTitle>
+                <CardDescription className="body-font text-emerald-100/60 text-lg">Pure Divine Revelation</CardDescription>
+              </CardContent>
+            </Card>
 
-            <div className="glass-card rounded-[2rem] p-8 group cursor-pointer gold-glow" onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}>
-              <div className="w-16 h-16 bg-amber-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-amber-500/30 transition-all">
-                <svg className="w-8 h-8 text-amber-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]">Prayer Times</h3>
-              <p className="body-font text-amber-100/60 text-lg">Precise Local Schedules</p>
-            </div>
+            <Card className="glass-card rounded-[2rem] p-8 group cursor-pointer gold-glow" onClick={() => document.getElementById('prayer-times').scrollIntoView({ behavior: 'smooth' })}>
+              <CardContent className="p-0">
+                <div className="w-16 h-16 bg-amber-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-amber-500/30 transition-all">
+                  <svg className="w-8 h-8 text-amber-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <CardTitle className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]">Prayer Times</CardTitle>
+                <CardDescription className="body-font text-amber-100/60 text-lg">Precise Local Schedules</CardDescription>
+              </CardContent>
+            </Card>
 
-            <div className="glass-card rounded-[2rem] p-8 group cursor-pointer shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:shadow-[0_0_35px_rgba(20,184,166,0.5)] transition-all duration-300" onClick={() => navigate('/hadiths')}>
-              <div className="w-16 h-16 bg-teal-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-teal-500/30 transition-all">
-                <svg className="w-8 h-8 text-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]">Prophetic Sunnah</h3>
-              <p className="body-font text-teal-100/60 text-lg">Authentic Hadith Library</p>
-            </div>
+            <Card className="glass-card rounded-[2rem] p-8 group cursor-pointer shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:shadow-[0_0_35px_rgba(20,184,166,0.5)] transition-all duration-300" onClick={() => navigate('/hadiths')}>
+              <CardContent className="p-0">
+                <div className="w-16 h-16 bg-teal-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-teal-500/30 transition-all">
+                  <svg className="w-8 h-8 text-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <CardTitle className="heading-font text-2xl font-bold text-white mb-2 drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]">Prophetic Sunnah</CardTitle>
+                <CardDescription className="body-font text-teal-100/60 text-lg">Authentic Hadith Library</CardDescription>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -444,7 +500,7 @@ const Home = () => {
 
       {/* Ramadan Special Section */}
       {(ramadanInfo?.isRamadan || (ramadanInfo?.daysToRamadan !== null && ramadanInfo?.daysToRamadan <= 30)) && (
-        <RamadanBanner ramadanInfo={ramadanInfo} />
+        <RamadanBanner ramadanInfo={ramadanInfo} showRamadanCalendar={showRamadanCalendar} setShowRamadanCalendar={setShowRamadanCalendar} />
       )}
 
       {/* Friday Special Section */}
@@ -452,6 +508,11 @@ const Home = () => {
 
       {/* 1. Inspiration Section - Now right after Hero */}
       <InspirationSection />
+
+      {/* Daily Azkhar Display - Shows selected daily remembrances */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DailyAzkharDisplay />
+      </div>
 
       {/* 2. Prayer Timings Section */}
       <div id="prayer-times" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -619,6 +680,76 @@ const Home = () => {
 
       {/* 8. MongoDB Statistics Section */}
       <MongoStats />
+
+      {/* Azkhar Reset Button for testing */}
+      <AzkharResetButton />
+
+      {/* Ramadan Calendar Modal */}
+      {showRamadanCalendar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold heading-font">Ramadan Calendar</h2>
+                  <p className="text-emerald-100 mt-2">Track your journey through the blessed month</p>
+                </div>
+                <button
+                  onClick={() => setShowRamadanCalendar(false)}
+                  className="text-white hover:bg-emerald-500 rounded-full p-2 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-3">
+                {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
+                  const currentDay = getCurrentRamadanDay();
+                  const isCurrentDay = day === currentDay;
+                  const isPastDay = day < currentDay;
+                  const isFutureDay = day > currentDay;
+                  
+                  return (
+                    <div
+                      key={day}
+                      className={`
+                        relative aspect-square rounded-2xl flex flex-col items-center justify-center font-bold text-lg transition-all
+                        ${isCurrentDay 
+                          ? 'bg-emerald-500 text-white shadow-lg scale-110 ring-4 ring-emerald-300' 
+                          : isPastDay 
+                          ? 'bg-gray-100 text-gray-400 opacity-50' 
+                          : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                        }
+                      `}
+                    >
+                      <span>{day}</span>
+                      <span className="text-xs mt-1">Ramadan</span>
+                      {isCurrentDay && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">🌙</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="mt-8 p-4 bg-emerald-50 rounded-2xl">
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">Current Day: Ramadan {getCurrentRamadanDay()}</h3>
+                <p className="text-emerald-700">
+                  {getCurrentRamadanDay() === 1 && "First day of Ramadan - May Allah accept our fasting!"}
+                  {getCurrentRamadanDay() > 1 && getCurrentRamadanDay() < 30 && "Keep up the great work! Every day is a new opportunity."}
+                  {getCurrentRamadanDay() === 30 && "Final day of Ramadan - Eid Mubarak in advance!"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
     </IslamicDateBackground>

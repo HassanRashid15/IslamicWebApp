@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DailyAzkharModal from '../../features/azkhar/components/DailyAzkharModal';
 
 const inspiringVerses = [
     {
@@ -43,6 +44,7 @@ const inspiringQuotes = [
 ];
 
 const WelcomeModal = () => {
+    const [showAzkharModal, setShowAzkharModal] = useState(false);
     const [isOpen, setIsOpen] = useState(() => {
         const hasVisited = typeof window !== 'undefined' ? sessionStorage.getItem('welcomeModalShown') : true;
         return !hasVisited;
@@ -58,6 +60,23 @@ const WelcomeModal = () => {
             quote: randomQuote
         };
     });
+
+    const handleAzkharComplete = () => {
+        setShowAzkharModal(false);
+    };
+
+    const handleWelcomeClose = () => {
+        setIsVisible(false);
+        setTimeout(() => {
+            setIsOpen(false);
+            sessionStorage.setItem('welcomeModalShown', 'true');
+            // Show azkhar modal after welcome modal closes
+            const hasSeenAzkhar = typeof window !== 'undefined' ? localStorage.getItem('dailyAzkharShown') : true;
+            if (!hasSeenAzkhar) {
+                setShowAzkharModal(true);
+            }
+        }, 600);
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -86,10 +105,12 @@ const WelcomeModal = () => {
         setTimeout(() => setIsOpen(false), 600);
     };
 
-    if (!isOpen) return null;
+    if (!isOpen && !showAzkharModal) return null;
 
     return (
-        <div className={`fixed inset-0 z-[99999] flex items-center justify-center p-4 transition-all duration-700 ${isVisible ? 'bg-black/80 backdrop-blur-xl' : 'bg-transparent backdrop-blur-0'}`}>
+        <>
+            {isOpen && (
+                <div className={`fixed inset-0 z-[99999] flex items-center justify-center p-4 transition-all duration-700 ${isVisible ? 'bg-black/80 backdrop-blur-xl' : 'bg-transparent backdrop-blur-0'}`}>
             <div
                 className={`relative max-w-2xl w-full bg-[#062026] rounded-[2.5rem] max-h-[600px] overflow-y-auto border border-emerald-500/30 shadow-[0_0_80px_rgba(16,185,129,0.3)] transition-all duration-700 transform ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-12'}`}
             >
@@ -155,7 +176,7 @@ const WelcomeModal = () => {
                     </div>
 
                     <button
-                        onClick={handleClose}
+                        onClick={handleWelcomeClose}
                         className="button-premium px-12 md:px-20 py-5 rounded-2xl text-[#062026] font-extrabold text-xl transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(212,175,55,0.3)] group flex items-center gap-4 mx-auto"
                     >
                         <span>Begin Journey</span>
@@ -217,8 +238,37 @@ const WelcomeModal = () => {
           left: 100%;
           opacity: 1;
         }
+        
+        /* Custom scrollbar styling for modal content only */
+        .max-h-\\[600px\\].overflow-y-auto::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .max-h-\\[600px\\].overflow-y-auto::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+        }
+        
+        .max-h-\\[600px\\].overflow-y-auto::-webkit-scrollbar-thumb {
+          background: rgba(212, 175, 55, 0.6);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        
+        .max-h-\\[600px\\].overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: rgba(212, 175, 55, 0.8);
+        }
+        
+        /* Firefox scrollbar for modal content only */
+        .max-h-\\[600px\\].overflow-y-auto {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(212, 175, 55, 0.6) rgba(255, 255, 255, 0.1);
+        }
       `}</style>
-        </div>
+                </div>
+            )}
+            {showAzkharModal && <DailyAzkharModal onComplete={handleAzkharComplete} />}
+        </>
     );
 };
 

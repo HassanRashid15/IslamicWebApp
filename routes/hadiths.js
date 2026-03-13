@@ -5,13 +5,15 @@ const {
   getRandomHadith,
   searchHadiths,
   getHadithsByBook,
-  getHadithTopics
+  getHadithTopics,
+  getHadithBooks
 } = require('../controllers/collectionController');
 const { body } = require('express-validator');
 
 const router = express.Router();
 
 // Public routes
+router.get('/books', getHadithBooks);
 router.get('/', getAllHadiths);
 router.get('/random', getRandomHadith);
 router.get('/search', searchHadiths);

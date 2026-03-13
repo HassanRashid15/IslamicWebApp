@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginForm from "./LoginForm";
 import IslamicQuote from "./IslamicQuote";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
